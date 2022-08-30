@@ -227,7 +227,7 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      * @param Boolean $isEncryptOperation If true - encrypt, false - decrypt entity
      *
      * @return object|null
-     *@throws \RuntimeException
+     * @throws \RuntimeException
      *
      */
     public function processFields(object $entity, bool $isEncryptOperation = true): ?object
