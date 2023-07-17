@@ -1,5 +1,5 @@
 {
-    "name": "absolute-quantum/doctrine-encrypt-bundle-demo",
+    "name": "doctrineencryptbundle/doctrine-encrypt-bundle-demo",
     "description": "Symlinks shared directories",
     "type": "metapackage",
     "require": {

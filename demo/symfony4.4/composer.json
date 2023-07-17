@@ -5,7 +5,7 @@
         "php": ">=7.1.3",
         "ext-ctype": "*",
         "ext-iconv": "*",
-        "absolute-quantum/doctrine-encrypt-bundle": "@dev",
+        "doctrineencryptbundle/doctrine-encrypt-bundle": "@dev",
         "doctrine/persistence": "^1.3|^2.0",
         "symfony/console": "4.4.*",
         "symfony/dotenv": "4.4.*",
