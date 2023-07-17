@@ -6,6 +6,8 @@ namespace Ambta\DoctrineEncryptBundle\Tests\Functional;
 
 use Ambta\DoctrineEncryptBundle\Encryptors\EncryptorInterface;
 use Ambta\DoctrineEncryptBundle\Encryptors\HaliteEncryptor;
+use Ambta\DoctrineEncryptBundle\Mapping\AttributeAnnotationReader;
+use Ambta\DoctrineEncryptBundle\Mapping\AttributeReader;
 use Ambta\DoctrineEncryptBundle\Subscribers\DoctrineEncryptSubscriber;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\DBAL\Logging\DebugStack;
@@ -67,7 +69,10 @@ abstract class AbstractFunctionalTestCase extends TestCase
         $this->entityManager->getConnection()->getConfiguration()->setSQLLogger($this->sqlLoggerStack);
 
         $this->encryptor = $this->getEncryptor();
-        $this->subscriber = new DoctrineEncryptSubscriber(new AnnotationReader(),$this->encryptor);
+        $annotationCacheDirectory = __DIR__.'/cache';
+        $this->createNewCacheDirectory ($annotationCacheDirectory);
+        $annotationReader = new AttributeAnnotationReader (new AttributeReader(), new AnnotationReader(), $annotationCacheDirectory);
+        $this->subscriber = new DoctrineEncryptSubscriber($annotationReader, $this->encryptor);
         $this->entityManager->getEventManager()->addEventSubscriber($this->subscriber);
 
         error_reporting(E_ALL);
@@ -77,6 +82,28 @@ abstract class AbstractFunctionalTestCase extends TestCase
     {
         $this->entityManager->getConnection()->close();
         unlink($this->dbFile);
+    }
+
+    protected function createNewCacheDirectory (string $annotationCacheDirectory): void
+    {
+        $this->recurseRmdir ($annotationCacheDirectory);
+        mkdir ($annotationCacheDirectory);
+    }
+
+    protected function recurseRmdir ($dir): bool
+    {
+        $contents = scandir($dir);
+        if (is_array ($contents))
+        {
+            $files = array_diff ($contents, array('.','..'));
+            foreach ($files as $file)
+            {
+                (is_dir("$dir/$file") && !is_link("$dir/$file")) ? $this->recurseRmdir("$dir/$file") : unlink("$dir/$file");
+            }
+            return rmdir($dir);
+        }
+
+        return false;
     }
 
     protected function getLatestInsertQuery(): ?array
