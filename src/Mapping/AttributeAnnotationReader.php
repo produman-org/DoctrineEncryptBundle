@@ -4,8 +4,10 @@ namespace Ambta\DoctrineEncryptBundle\Mapping;
 
 use Doctrine\Common\Annotations\Reader;
 use Ambta\DoctrineEncryptBundle\Configuration\Annotation;
+use Doctrine\Common\Annotations\PsrCachedReader;
 use ReflectionClass;
 use ReflectionMethod;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
 /**
  * @author Flavien Bucheton <leflav45@gmail.com>
@@ -24,10 +26,11 @@ final class AttributeAnnotationReader implements Reader
      */
     private $attributeReader;
 
-    public function __construct(AttributeReader $attributeReader, Reader $annotationReader)
+    public function __construct(AttributeReader $attributeReader, Reader $annotationReader, string $cacheDir)
     {
         $this->attributeReader = $attributeReader;
-        $this->annotationReader = $annotationReader;
+        $annotationsCache = new FilesystemAdapter('', 0, $cacheDir.'/doctrine_encrypt');
+        $this->annotationReader = new PsrCachedReader ($annotationReader, $annotationsCache);
     }
 
     /**
