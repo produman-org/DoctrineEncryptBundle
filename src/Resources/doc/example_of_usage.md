@@ -137,4 +137,4 @@ So our information is encrypted, and unless someone has your .DefuseEncryptor.ke
 
 You need `DoctrineFixturesBundle` and `defuse/php-encryption` extension for this example
 
-#### [Back to index](https://github.com/michaeldegroot/DoctrineEncryptBundle/blob/master/src/Resources/doc/index.md)
+#### [Back to index](https://github.com/DoctrineEncryptBundle/DoctrineEncryptBundle/blob/master/src/Resources/doc/index.md)

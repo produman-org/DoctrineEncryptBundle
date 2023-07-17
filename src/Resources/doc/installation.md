@@ -6,7 +6,7 @@
 
 ### Requirements
 
- - PHP >=8.0
+ - PHP ^7.2 | ^8.0
  - Comes with package: [paragonie/sodium_compat](https://github.com/paragonie/sodium_compat) ^1.5
  - Comes with package: [Halite](https://github.com/paragonie/halite) ^3.0
  - [doctrine/orm](https://packagist.org/packages/doctrine/orm) >= 2.0
@@ -19,7 +19,7 @@ DoctrineEncryptBundle should be installed using [Composer](http://getcomposer.or
 ``` js
 {
     "require": {
-        "michaeldegroot/doctrine-encrypt-bundle": "3.0.*"
+        "doctrineencryptbundle/doctrine-encrypt-bundle": "5.3.*"
     }
 }
 ```
@@ -27,7 +27,7 @@ DoctrineEncryptBundle should be installed using [Composer](http://getcomposer.or
 Now tell composer to download the bundle by running the command:
 
 ``` bash
-$ php composer.phar update michaeldegroot/doctrine-encrypt-bundle
+$ php composer.phar update doctrineencryptbundle/doctrine-encrypt-bundle
 ```
 
 Composer will install the bundle to your project's `vendor/ambta` directory.
@@ -51,4 +51,4 @@ public function registerBundles()
 All configuration value's are optional.
 On the following page you can find the configuration information.
 
-#### [Configuration](https://github.com/michaeldegroot/DoctrineEncryptBundle/blob/master/src/Resources/doc/configuration.md)
+#### [Configuration](https://github.com/DoctrineEncryptBundle/DoctrineEncryptBundle/blob/master/src/Resources/doc/configuration.md)

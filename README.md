@@ -1,16 +1,24 @@
-[![Logo](https://i.imgur.com/sfmU6wt.png)](https://github.com/michaeldegroot/DoctrineEncryptBundle) 
+[![Logo](https://i.imgur.com/sfmU6wt.png)](https://github.com/DoctrineEncryptBundle/DoctrineEncryptBundle)
 
-[![Build status](https://travis-ci.org/michaeldegroot/DoctrineEncryptBundle.svg?branch=master)](https://travis-ci.org/michaeldegroot/DoctrineEncryptBundle) 
-[![License](https://img.shields.io/github/license/michaeldegroot/DoctrineEncryptBundle.svg)](https://raw.githubusercontent.com/michaeldegroot/DoctrineEncryptBundle/master/LICENSE) 
-[![Latest version](https://poser.pugx.org/michaeldegroot/doctrine-encrypt-bundle/version)](https://packagist.org/packages/michaeldegroot/doctrine-encrypt-bundle) 
-[![Latest Unstable Version](https://poser.pugx.org/michaeldegroot/doctrine-encrypt-bundle/v/unstable)](https://packagist.org/packages/michaeldegroot/doctrine-encrypt-bundle) 
-[![Total downloads](https://poser.pugx.org/michaeldegroot/doctrine-encrypt-bundle/downloads)](https://packagist.org/packages/michaeldegroot/doctrine-encrypt-bundle) 
-[![Downloads this month](https://poser.pugx.org/michaeldegroot/doctrine-encrypt-bundle/d/monthly)](https://packagist.org/packages/michaeldegroot/doctrine-encrypt-bundle) 
+[![Build status](https://travis-ci.org/DoctrineEncryptBundle/DoctrineEncryptBundle.svg?branch=master)](https://travis-ci.org/DoctrineEncryptBundle/DoctrineEncryptBundle)
+[![License](https://img.shields.io/github/license/DoctrineEncryptBundle/DoctrineEncryptBundle.svg)](https://raw.githubusercontent.com/DoctrineEncryptBundle/DoctrineEncryptBundle/master/LICENSE)
+[![Latest version](https://poser.pugx.org/DoctrineEncryptBundle/doctrine-encrypt-bundle/version)](https://packagist.org/packages/DoctrineEncryptBundle/doctrine-encrypt-bundle)
+[![Latest Unstable Version](https://poser.pugx.org/DoctrineEncryptBundle/doctrine-encrypt-bundle/v/unstable)](https://packagist.org/packages/DoctrineEncryptBundle/doctrine-encrypt-bundle)
+[![Total downloads](https://poser.pugx.org/DoctrineEncryptBundle/doctrine-encrypt-bundle/downloads)](https://packagist.org/packages/DoctrineEncryptBundle/doctrine-encrypt-bundle)
+[![Downloads this month](https://poser.pugx.org/DoctrineEncryptBundle/doctrine-encrypt-bundle/d/monthly)](https://packagist.org/packages/DoctrineEncryptBundle/doctrine-encrypt-bundle)
 
 ### Introduction
 
-This is a fork from the original bundle created by ambta which can be found here:
-[ambta/DoctrineEncryptBundle](https://github.com/ambta/DoctrineEncryptBundle)
+This version of the DoctrineEncryptBundle was initially forked from:
+[integr8rs/DoctrineEncryptBundle](https://github.com/integr8rs/DoctrineEncryptBundle)
+
+This version was created due to be maintained and managed by a GitHub organization (DoctrineEncryptBundle) due to all
+previous versions that were installable not being actively maintained any longer.
+This includes the most popular on as well:
+[michaeldegroot/doctrine-encrypt-bundle](https://github.com/absolute-quantum/DoctrineEncryptBundle)
+
+The original bundle created by ambta can be found here:
+-[ambta/DoctrineEncryptBundle](https://github.com/ambta/DoctrineEncryptBundle)
 
 This bundle has updated security by not rolling it's own encryption and using verified standardized library's from the field.
 
@@ -65,5 +73,5 @@ Filename example: `.DefuseEncryptor.key` or `.HaliteEncryptor.key`
 
 ### Demo
 
-Two demo-installations, one using symfony 4.4 and one using symfony 6.x, can be found in this repository in [`demo`](demo).  This demonstrates how to use 
+Two demo-installations, one using symfony 4.4 and one using symfony 6.x, can be found in this repository in [`demo`](demo).  This demonstrates how to use
 the application using both annotations and, when using php > 8.0, attributes.
