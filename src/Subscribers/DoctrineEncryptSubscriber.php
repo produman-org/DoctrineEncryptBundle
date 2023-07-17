@@ -15,6 +15,7 @@ use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\Common\Util\ClassUtils;
 use Ambta\DoctrineEncryptBundle\Encryptors\EncryptorInterface;
+use Ambta\DoctrineEncryptBundle\Mapping\AttributeReader;
 use ReflectionProperty;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
@@ -46,7 +47,7 @@ class DoctrineEncryptSubscriber implements EventSubscriber
 
     /**
      * Annotation reader
-     * @var Reader
+     * @var Reader|AttributeReader
      */
     private $annReader;
 
@@ -86,10 +87,10 @@ class DoctrineEncryptSubscriber implements EventSubscriber
     /**
      * Initialization of subscriber
      *
-     * @param Reader $annReader
+     * @param Reader|AttributeReader $annReader
      * @param EncryptorInterface $encryptor (Optional)  An EncryptorInterface.
      */
-    public function __construct(Reader $annReader, EncryptorInterface $encryptor)
+    public function __construct(Reader|AttributeReader $annReader, EncryptorInterface $encryptor)
     {
         $this->annReader = $annReader;
         $this->encryptor = $encryptor;
