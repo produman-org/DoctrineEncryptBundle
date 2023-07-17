@@ -54,6 +54,6 @@ class DoctrineEncryptStatusCommand extends AbstractCommand
         $output->writeln('');
         $output->writeln(sprintf('<info>%d</info> entities found which are containing <info>%d</info> encrypted properties.', count($metaDataArray), $totalCount));
 
-        return 0;
+        return defined('AbstractCommand::SUCCESS') ? AbstractCommand::SUCCESS : 0;
     }
 }

@@ -54,7 +54,9 @@ class DoctrineDecryptDatabaseCommand extends AbstractCommand
                 } else {
                     $output->writeln('Given encryptor does not exists');
 
-                    return $output->writeln('Supported encryptors: ' . implode(', ', array_keys($supportedExtensions)));
+                    $output->writeln('Supported encryptors: ' . implode(', ', array_keys($supportedExtensions)));
+
+                    return defined('AbstractCommand::INVALID') ? AbstractCommand::INVALID : 2;
                 }
             }
         }
@@ -82,7 +84,7 @@ class DoctrineDecryptDatabaseCommand extends AbstractCommand
         );
 
         if (!$question->ask($input, $output, $confirmationQuestion)) {
-            return 1;
+            return defined('AbstractCommand::FAILURE') ? AbstractCommand::FAILURE : 1;
         }
 
         // Start decrypting database
@@ -147,6 +149,6 @@ class DoctrineDecryptDatabaseCommand extends AbstractCommand
 
         $output->writeln('' . PHP_EOL . 'Decryption finished values found: <info>' . $valueCounter . '</info>, decrypted: <info>' . $this->subscriber->decryptCounter . '</info>.' . PHP_EOL . 'All values are now decrypted.');
 
-        return 0;
+        return defined('AbstractCommand::SUCCESS') ? AbstractCommand::SUCCESS : 0;
     }
 }
