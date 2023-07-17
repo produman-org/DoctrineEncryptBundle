@@ -136,8 +136,8 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      */
     public function postUpdate(LifecycleEventArgs $args)
     {
-        $entity = $args->getEntity();
-        $this->processFields($entity, $args->getEntityManager(), false);
+        $entity = $args->getObject();
+        $this->processFields($entity, $args->getObjectManager(), false);
     }
 
     /**
@@ -148,8 +148,8 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      */
     public function preUpdate(PreUpdateEventArgs $args)
     {
-        $entity = $args->getEntity();
-        $this->processFields($entity, $args->getEntityManager(), true);
+        $entity = $args->getObject();
+        $this->processFields($entity, $args->getObjectManager(), true);
     }
 
     /**
@@ -160,8 +160,8 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      */
     public function postLoad(LifecycleEventArgs $args)
     {
-        $entity = $args->getEntity();
-        $this->processFields($entity, $args->getEntityManager(), false);
+        $entity = $args->getObject();
+        $this->processFields($entity, $args->getObjectManager(), false);
     }
 
     /**
@@ -172,11 +172,11 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      */
     public function preFlush(PreFlushEventArgs $preFlushEventArgs)
     {
-        $unitOfWOrk = $preFlushEventArgs->getEntityManager()->getUnitOfWork();
+        $unitOfWOrk = $preFlushEventArgs->getObjectManager()->getUnitOfWork();
         foreach ($unitOfWOrk->getIdentityMap() as $entityName => $entityArray) {
             if (isset($this->cachedDecryptions[$entityName])) {
                 foreach ($entityArray as $entityId => $instance) {
-                    $this->processFields($instance, $preFlushEventArgs->getEntityManager(), true);
+                    $this->processFields($instance, $preFlushEventArgs->getObjectManager(), true);
                 }
             }
         }
@@ -191,12 +191,12 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      */
     public function onFlush(OnFlushEventArgs $onFlushEventArgs)
     {
-        $unitOfWork = $onFlushEventArgs->getEntityManager()->getUnitOfWork();
+        $unitOfWork = $onFlushEventArgs->getObjectManager()->getUnitOfWork();
         foreach ($unitOfWork->getScheduledEntityInsertions() as $entity) {
             $encryptCounterBefore = $this->encryptCounter;
-            $this->processFields($entity,$onFlushEventArgs->getEntityManager(),true);
+            $this->processFields($entity,$onFlushEventArgs->getObjectManager(),true);
             if ($this->encryptCounter > $encryptCounterBefore ) {
-                $classMetadata = $onFlushEventArgs->getEntityManager()->getClassMetadata(get_class($entity));
+                $classMetadata = $onFlushEventArgs->getObjectManager()->getClassMetadata(get_class($entity));
                 $unitOfWork->recomputeSingleEntityChangeSet($classMetadata, $entity);
             }
         }
@@ -210,10 +210,10 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      */
     public function postFlush(PostFlushEventArgs $postFlushEventArgs)
     {
-        $unitOfWork = $postFlushEventArgs->getEntityManager()->getUnitOfWork();
+        $unitOfWork = $postFlushEventArgs->getObjectManager()->getUnitOfWork();
         foreach ($unitOfWork->getIdentityMap() as $entityMap) {
             foreach ($entityMap as $entity) {
-                $this->processFields($entity,$postFlushEventArgs->getEntityManager(), false);
+                $this->processFields($entity,$postFlushEventArgs->getObjectManager(), false);
             }
         }
     }
