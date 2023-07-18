@@ -53,7 +53,9 @@ class DoctrineEncryptDatabaseCommand extends AbstractCommand
                 } else {
                     $output->writeln('Given encryptor does not exists');
 
-                    return $output->writeln('Supported encryptors: ' . implode(', ', array_keys($supportedExtensions)));
+                    $output->writeln('Supported encryptors: ' . implode(', ', array_keys($supportedExtensions)));
+
+                    return defined('AbstractCommand::INVALID') ? AbstractCommand::INVALID : 2;
                 }
             }
         }
@@ -84,7 +86,9 @@ class DoctrineEncryptDatabaseCommand extends AbstractCommand
             $output->writeln(sprintf('Processing <comment>%s</comment>', $metaData->name));
             $progressBar = new ProgressBar($output, $totalCount);
             foreach ($iterator as $row) {
-                $this->subscriber->processFields((is_array($row) ? $row[0] : $row), $this->entityManager);
+                $entity = (is_array($row) ? $row[0] : $row);
+                $this->subscriber->processFields($entity, $this->entityManager);
+                $this->entityManager->persist($entity);
 
                 if (($i % $batchSize) === 0) {
                     $this->entityManager->flush();
