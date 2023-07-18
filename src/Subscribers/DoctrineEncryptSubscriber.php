@@ -10,7 +10,6 @@ use Doctrine\ORM\Event\PostFlushEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
-use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\Common\Util\ClassUtils;
@@ -126,33 +125,6 @@ class DoctrineEncryptSubscriber implements EventSubscriber
     }
 
     /**
-     * Listen a postUpdate lifecycle event.
-     * Decrypt entities property's values when post updated.
-     *
-     * So for example after form submit the preUpdate encrypted the entity
-     * We have to decrypt them before showing them again.
-     *
-     * @param LifecycleEventArgs $args
-     */
-    public function postUpdate(LifecycleEventArgs $args)
-    {
-        $entity = $args->getObject();
-        $this->processFields($entity, $args->getObjectManager(), false);
-    }
-
-    /**
-     * Listen a preUpdate lifecycle event.
-     * Encrypt entities property's values on preUpdate, so they will be stored encrypted
-     *
-     * @param PreUpdateEventArgs $args
-     */
-    public function preUpdate(PreUpdateEventArgs $args)
-    {
-        $entity = $args->getObject();
-        $this->processFields($entity, $args->getObjectManager(), true);
-    }
-
-    /**
      * Listen a postLoad lifecycle event.
      * Decrypt entities property's values when loaded into the entity manger
      *
@@ -172,8 +144,8 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      */
     public function preFlush(PreFlushEventArgs $preFlushEventArgs)
     {
-        $unitOfWOrk = $preFlushEventArgs->getObjectManager()->getUnitOfWork();
-        foreach ($unitOfWOrk->getIdentityMap() as $entityName => $entityArray) {
+        $unitOfWork = $preFlushEventArgs->getObjectManager()->getUnitOfWork();
+        foreach ($unitOfWork->getIdentityMap() as $entityName => $entityArray) {
             if (isset($this->cachedDecryptions[$entityName])) {
                 foreach ($entityArray as $entityId => $instance) {
                     $this->processFields($instance, $preFlushEventArgs->getObjectManager(), true);
@@ -195,7 +167,7 @@ class DoctrineEncryptSubscriber implements EventSubscriber
         foreach ($unitOfWork->getScheduledEntityInsertions() as $entity) {
             $encryptCounterBefore = $this->encryptCounter;
             $this->processFields($entity,$onFlushEventArgs->getObjectManager(),true);
-            if ($this->encryptCounter > $encryptCounterBefore ) {
+            if ($this->encryptCounter > $encryptCounterBefore) {
                 $classMetadata = $onFlushEventArgs->getObjectManager()->getClassMetadata(get_class($entity));
                 $unitOfWork->recomputeSingleEntityChangeSet($classMetadata, $entity);
             }
@@ -233,8 +205,6 @@ class DoctrineEncryptSubscriber implements EventSubscriber
     public function getSubscribedEvents(): array
     {
         return array(
-            Events::postUpdate,
-            Events::preUpdate,
             Events::postLoad,
             Events::onFlush,
             Events::preFlush,
@@ -251,7 +221,7 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      * @param Boolean $isEncryptOperation If true - encrypt, false - decrypt entity
      *
      * @return object|null
-     *@throws \RuntimeException
+     * @throws \RuntimeException
      *
      */
     public function processFields(object $entity,  EntityManagerInterface $entityManager, bool $isEncryptOperation = true): ?object
