@@ -27,9 +27,27 @@ You can use the comment `doctrine:encrypt:database [encryptor]` to encrypt the c
 * Optional parameter [encryptor]
     * An encryptor provided by the bundle (Defuse or Halite) or your own [encryption class](https://github.com/DoctrineEncryptBundle/DoctrineEncryptBundle/blob/master/src/Resources/doc/custom_encryptor.md).
     * Default: Your encryptor set in the configuration file or the default encryption class when not set in the configuration file
+* Optional parameter [batchSize]
+    * The amount of Entities that are processed before flush is called.
+    * Default: 20
+* Optional parameter [answer]
+    * The answer to the confirmation question.
+    * When specified the question is skipped and the supplied answer given.
+    * Anything except y or yes will be seen as no
+    * When not specified the confirmation question is asked
 
 ```
 $ php bin/console doctrine:encrypt:database
+```
+
+The command asks a confirmation question similar to this:
+
+```
+9 entities found which are containing properties with the encryption tag.
+Which are going to be encrypted with [Ambta\DoctrineEncryptBundle\Encryptors\HaliteEncryptor].
+Wrong settings can mess up your data and it will be unrecoverable.
+I advise you to make a backup.
+Continue with this action? (y/yes)
 ```
 
 or you can provide an encryptor (optional).
@@ -42,11 +60,23 @@ $ php bin/console doctrine:encrypt:database Defuse
 $ php bin/console doctrine:encrypt:database Halite
 ```
 
-This command will return the amount of values encrypted in the database.
+you can also provide the batchsize (optional) to specify the batchSize the encryptor is also required.
 
 ```
-Encryption finished values encrypted: 203 values.
+$ php bin/console doctrine:encrypt:database Halite 30
 ```
+
+Skipping the confirmation question may be done by supplying the answer to be used
+
+```
+$ php bin/console doctrine:encrypt:database --answer=y
+```
+
+```
+$ php bin/console doctrine:encrypt:database --answer=yes
+```
+
+This command will output the progess and state the all values found are now encrypted when done.
 
 
 ## 3) Decrypt current database
@@ -56,9 +86,27 @@ You can use the comment `doctrine:decrypt:database [encryptor]` to decrypt the c
 * Optional parameter [encryptor]
     * An encryptor provided by the bundle (Defuse or Halite) or your own [encryption class](https://github.com/DoctrineEncryptBundle/DoctrineEncryptBundle/blob/master/src/Resources/doc/custom_encryptor.md).
     * Default: Your encryptor set in the configuration file or the default encryption class when not set in the configuration file
+* Optional parameter [batchSize]
+    * The amount of Entities that are processed before flush is called.
+    * Default: 20
+* Optional parameter [answer]
+    * The answer to the confirmation question.
+    * When specified the question is skipped and the supplied answer given.
+    * Anything except y or yes will be seen as no
+    * When not specified the confirmation question is asked
 
 ```
 $ php bin/console doctrine:decrypt:database
+```
+
+The command asks a confirmation question similar to this:
+
+```
+199 entities found which are containing 40 properties with the encryption tag.
+Which are going to be decrypted with [Ambta\DoctrineEncryptBundle\Encryptors\HaliteEncryptor].
+Wrong settings can mess up your data and it will be unrecoverable.
+I advise you to make a backup.
+Continue with this action? (y/yes)
 ```
 
 or you can provide an encryptor (optional).
@@ -71,11 +119,23 @@ $ php bin/console doctrine:decrypt:database Defuse
 $ php bin/console doctrine:decrypt:database Halite
 ```
 
-This command will return the amount of entities and the amount of values decrypted in the database.
+you can also provide the batchsize (optional) to specify the batchSize the encryptor is also required.
 
 ```
-Decryption finished entities found: 26, decrypted 195 values.
+$ php bin/console doctrine:decrypt:database Halite 30
 ```
+
+Skipping the confirmation question may be done by supplying the answer to be used
+
+```
+$ php bin/console doctrine:decrypt:database --answer=y
+```
+
+```
+$ php bin/console doctrine:decrypt:database --answer=yes
+```
+
+This command will output the progess and state the all values found are now decrypted when done.
 
 ## Custom encryption class
 
