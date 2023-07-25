@@ -144,11 +144,12 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      */
     public function preFlush(PreFlushEventArgs $preFlushEventArgs)
     {
-        $unitOfWork = $preFlushEventArgs->getObjectManager()->getUnitOfWork();
+        $objectManager = method_exists($preFlushEventArgs, 'getObjectManager') ? $preFlushEventArgs->getObjectManager() : $preFlushEventArgs->getEntityManager();
+        $unitOfWork = $objectManager->getUnitOfWork();
         foreach ($unitOfWork->getIdentityMap() as $entityName => $entityArray) {
             if (isset($this->cachedDecryptions[$entityName])) {
                 foreach ($entityArray as $entityId => $instance) {
-                    $this->processFields($instance, $preFlushEventArgs->getObjectManager(), true);
+                    $this->processFields($instance, $objectManager, true);
                 }
             }
         }
@@ -163,12 +164,13 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      */
     public function onFlush(OnFlushEventArgs $onFlushEventArgs)
     {
-        $unitOfWork = $onFlushEventArgs->getObjectManager()->getUnitOfWork();
+        $objectManager = method_exists($onFlushEventArgs, 'getObjectManager') ? $onFlushEventArgs->getObjectManager() : $onFlushEventArgs->getEntityManager();
+        $unitOfWork = $objectManager->getUnitOfWork();
         foreach ($unitOfWork->getScheduledEntityInsertions() as $entity) {
             $encryptCounterBefore = $this->encryptCounter;
-            $this->processFields($entity,$onFlushEventArgs->getObjectManager(),true);
+            $this->processFields($entity,$objectManager,true);
             if ($this->encryptCounter > $encryptCounterBefore) {
-                $classMetadata = $onFlushEventArgs->getObjectManager()->getClassMetadata(get_class($entity));
+                $classMetadata = $objectManager->getClassMetadata(get_class($entity));
                 $unitOfWork->recomputeSingleEntityChangeSet($classMetadata, $entity);
             }
         }
@@ -182,10 +184,11 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      */
     public function postFlush(PostFlushEventArgs $postFlushEventArgs)
     {
-        $unitOfWork = $postFlushEventArgs->getObjectManager()->getUnitOfWork();
+        $objectManager = method_exists($postFlushEventArgs, 'getObjectManager') ? $postFlushEventArgs->getObjectManager() : $postFlushEventArgs->getEntityManager();
+        $unitOfWork = $objectManager->getUnitOfWork();
         foreach ($unitOfWork->getIdentityMap() as $entityMap) {
             foreach ($entityMap as $entity) {
-                $this->processFields($entity,$postFlushEventArgs->getObjectManager(), false);
+                $this->processFields($entity,$objectManager, false);
             }
         }
     }
@@ -224,7 +227,7 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      * @throws \RuntimeException
      *
      */
-    public function processFields(object $entity,  EntityManagerInterface $entityManager, bool $isEncryptOperation = true): ?object
+    public function processFields(object $entity, EntityManagerInterface $entityManager, bool $isEncryptOperation = true): ?object
     {
         if (!empty($this->encryptor) && $this->containsEncryptProperties($entity)) {
             // Check which operation to be used
