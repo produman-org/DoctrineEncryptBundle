@@ -6,6 +6,7 @@ use Ambta\DoctrineEncryptBundle\DependencyInjection\DoctrineEncryptExtension;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 
@@ -26,7 +27,8 @@ class DoctrineEncryptDatabaseCommand extends AbstractCommand
             ->setName('doctrine:encrypt:database')
             ->setDescription('Encrypt whole database on tables which are not encrypted yet')
             ->addArgument('encryptor', InputArgument::OPTIONAL, 'The encryptor you want to decrypt the database with')
-            ->addArgument('batchSize', InputArgument::OPTIONAL, 'The update/flush batch size', 20);
+            ->addArgument('batchSize', InputArgument::OPTIONAL, 'The update/flush batch size', 20)
+            ->addOption('answer', null, InputOption::VALUE_OPTIONAL, 'The answer for the interactive question. When specified the question is skipped and the supplied answer given. Anything except y/yes will be seen as no');
     }
 
     /**
@@ -60,6 +62,15 @@ class DoctrineEncryptDatabaseCommand extends AbstractCommand
             }
         }
 
+        $defaultAnswer = false;
+        $answer = $input->getOption('answer');
+        if ($answer) {
+            $input->setInteractive (false);
+            if ($answer === 'y' || $answer === 'yes') {
+                $defaultAnswer = true;
+            }
+        }
+
         // Get entity manager metadata
         $metaDataArray = $this->getEncryptionableEntityMetaData();
         $confirmationQuestion = new ConfirmationQuestion(
@@ -67,7 +78,7 @@ class DoctrineEncryptDatabaseCommand extends AbstractCommand
             'Which are going to be encrypted with [' . get_class($this->subscriber->getEncryptor()) . ']. ' . PHP_EOL . ''.
             'Wrong settings can mess up your data and it will be unrecoverable. ' . PHP_EOL . '' .
             'I advise you to make <bg=yellow;options=bold>a backup</bg=yellow;options=bold>. ' . PHP_EOL . '' .
-            'Continue with this action? (y/yes)</question>', false
+            'Continue with this action? (y/yes)</question>', $defaultAnswer
         );
 
         if (!$question->ask($input, $output, $confirmationQuestion)) {
