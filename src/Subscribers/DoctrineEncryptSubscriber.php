@@ -130,7 +130,7 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      *
      * @param LifecycleEventArgs $args
      */
-    public function postLoad(LifecycleEventArgs $args)
+    public function postLoad($args)
     {
         $entity = $args->getObject();
         $this->processFields($entity, $args->getObjectManager(), false);
