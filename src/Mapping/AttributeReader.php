@@ -22,7 +22,7 @@ final class AttributeReader
      */
     public function getClassAnnotations(ReflectionClass $class): array
     {
-        return $this->convertToAttributeInstances($class->getAttributes());
+        return (method_exists($class, 'getAttributes')) ? $this->convertToAttributeInstances($class->getAttributes()) : [];
     }
 
     /**
@@ -41,7 +41,7 @@ final class AttributeReader
      */
     public function getPropertyAnnotations(\ReflectionProperty $property): array
     {
-        return $this->convertToAttributeInstances($property->getAttributes());
+        return (method_exists($property, 'getAttributes')) ? $this->convertToAttributeInstances($property->getAttributes()) : [];
     }
 
     /**
@@ -100,5 +100,3 @@ final class AttributeReader
         return $this->isRepeatableAttribute[$attributeClassName] = ($attribute->flags & Attribute::IS_REPEATABLE) > 0;
     }
 }
-
-
