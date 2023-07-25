@@ -89,7 +89,7 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      * @param Reader|AttributeReader $annReader
      * @param EncryptorInterface $encryptor (Optional)  An EncryptorInterface.
      */
-    public function __construct(Reader|AttributeReader $annReader, EncryptorInterface $encryptor)
+    public function __construct($annReader, EncryptorInterface $encryptor)
     {
         $this->annReader = $annReader;
         $this->encryptor = $encryptor;

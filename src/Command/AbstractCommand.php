@@ -40,7 +40,7 @@ abstract class AbstractCommand extends Command
      */
     public function __construct(
         EntityManagerInterface $entityManager,
-        Reader|AttributeReader $annotationReader,
+        $annotationReader,
         DoctrineEncryptSubscriber $subscriber
     ) {
         parent::__construct();
