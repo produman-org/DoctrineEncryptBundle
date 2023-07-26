@@ -3,7 +3,7 @@
 
 namespace Ambta\DoctrineEncryptBundle\Tests\Functional\fixtures\Entity;
 
-
+use Ambta\DoctrineEncryptBundle\Configuration\Encrypted;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -12,7 +12,6 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Owner
 {
-
     /**
      * @var int
      * @ORM\Id
@@ -22,7 +21,7 @@ class Owner
     private $id;
 
     /**
-     * @Ambta\DoctrineEncryptBundle\Configuration\Encrypted()
+     * @Encrypted
      * @ORM\Column(type="string", nullable=true)
      */
     private $secret;

@@ -15,6 +15,7 @@ use Doctrine\Common\Annotations\Reader;
 use Doctrine\Common\Util\ClassUtils;
 use Ambta\DoctrineEncryptBundle\Encryptors\EncryptorInterface;
 use Ambta\DoctrineEncryptBundle\Mapping\AttributeReader;
+use DateTime;
 use ReflectionProperty;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
@@ -39,6 +40,11 @@ class DoctrineEncryptSubscriber implements EventSubscriber
     const ENCRYPTED_ANN_NAME = 'Ambta\DoctrineEncryptBundle\Configuration\Encrypted';
 
     /**
+     * DateTime format
+     */
+    const DATETIME_FORMAT = 'Y-m-d\\TH:i:s.uP';
+
+    /**
      * Encryptor
      * @var EncryptorInterface|null
      */
@@ -55,6 +61,12 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      * @var EncryptorInterface|string
      */
     private $restoreEncryptor;
+
+    /**
+     * Used for restoring the encryptor after changing it
+     * @var PropertyAccessorInterface|string
+     */
+    private $pac;
 
     /**
      * Count amount of decrypted values in this service
@@ -94,6 +106,7 @@ class DoctrineEncryptSubscriber implements EventSubscriber
         $this->annReader = $annReader;
         $this->encryptor = $encryptor;
         $this->restoreEncryptor = $this->encryptor;
+        $this->pac = PropertyAccess::createPropertyAccessor();
     }
 
     /**
@@ -230,9 +243,6 @@ class DoctrineEncryptSubscriber implements EventSubscriber
     public function processFields(object $entity, EntityManagerInterface $entityManager, bool $isEncryptOperation = true): ?object
     {
         if (!empty($this->encryptor) && $this->containsEncryptProperties($entity)) {
-            // Check which operation to be used
-            $encryptorMethod = $isEncryptOperation ? 'encrypt' : 'decrypt';
-
             $realClass = ClassUtils::getClass($entity);
 
             // Get ReflectionClass of our entity
@@ -248,28 +258,56 @@ class DoctrineEncryptSubscriber implements EventSubscriber
                 /**
                  * If property is an normal value and contains the Encrypt tag, lets encrypt/decrypt that property
                  */
-                if ($this->isPropertyEncryped($refProperty)) {
+                $encryptType = $this->getEncryptedPropertyType($refProperty);
+                if ($encryptType) {
                     $rootEntityName = $entityManager->getClassMetadata(get_class($entity))->rootEntityName;
 
-                    $pac = PropertyAccess::createPropertyAccessor();
-                    $value = $pac->getValue($entity, $refProperty->getName());
-                    if ($encryptorMethod === 'decrypt') {
-                        if (!is_null($value) and !empty($value)) {
+                    $value = $this->pac->getValue($entity, $refProperty->getName());
+                    if (!is_null($value) and !empty($value)) {
+                        if ($isEncryptOperation) {
+                            // Default string value
+                            $usedValue = $value;
+                            if ($encryptType == 'datetime')
+                            {
+                                $usedValue = $value->format (self::DATETIME_FORMAT);
+                            }
+                            elseif ($encryptType == 'json')
+                            {
+                                $usedValue = json_encode($value);
+                            }
+                            elseif ($encryptType == 'array')
+                            {
+                                $usedValue = serialize($value);
+                            }
+
+                            if (isset($this->cachedDecryptions[$rootEntityName][spl_object_id($entity)][$refProperty->getName()][$usedValue])) {
+                                $this->pac->setValue($entity, $refProperty->getName(), $this->cachedDecryptions[$rootEntityName][spl_object_id($entity)][$refProperty->getName()][$usedValue]);
+                            } elseif (substr($usedValue, -strlen(self::ENCRYPTION_MARKER)) != self::ENCRYPTION_MARKER) {
+                                $this->encryptCounter++;
+                                $currentPropValue = $this->encryptor->encrypt($usedValue).self::ENCRYPTION_MARKER;
+                                $this->pac->setValue($entity, $refProperty->getName(), $currentPropValue);
+                            }
+                        } else {
                             if (substr($value, -strlen(self::ENCRYPTION_MARKER)) == self::ENCRYPTION_MARKER) {
                                 $this->decryptCounter++;
                                 $currentPropValue = $this->encryptor->decrypt(substr($value, 0, -5));
-                                $pac->setValue($entity, $refProperty->getName(), $currentPropValue);
                                 $this->cachedDecryptions[$rootEntityName][spl_object_id($entity)][$refProperty->getName()][$currentPropValue] = $value;
-                            }
-                        }
-                    } else {
-                        if (!is_null($value) and !empty($value)) {
-                            if (isset($this->cachedDecryptions[$rootEntityName][spl_object_id($entity)][$refProperty->getName()][$value])) {
-                                $pac->setValue($entity, $refProperty->getName(), $this->cachedDecryptions[$rootEntityName][spl_object_id($entity)][$refProperty->getName()][$value]);
-                            } elseif (substr($value, -strlen(self::ENCRYPTION_MARKER)) != self::ENCRYPTION_MARKER) {
-                                $this->encryptCounter++;
-                                $currentPropValue = $this->encryptor->encrypt($value).self::ENCRYPTION_MARKER;
-                                $pac->setValue($entity, $refProperty->getName(), $currentPropValue);
+                                if ($encryptType == 'string')
+                                {
+                                    $this->pac->setValue($entity, $refProperty->getName(), $currentPropValue);
+                                }
+                                elseif ($encryptType == 'datetime')
+                                {
+                                    $this->pac->setValue($entity, $refProperty->getName(), DateTime::createFromFormat(self::DATETIME_FORMAT, $currentPropValue));
+                                }
+                                elseif ($encryptType == 'json')
+                                {
+                                    $this->pac->setValue($entity, $refProperty->getName(), json_decode($currentPropValue, true));
+                                }
+                                elseif ($encryptType == 'array')
+                                {
+                                    $this->pac->setValue($entity, $refProperty->getName(), unserialize($currentPropValue));
+                                }
                             }
                         }
                     }
@@ -286,9 +324,7 @@ class DoctrineEncryptSubscriber implements EventSubscriber
     {
         $propName = $embeddedProperty->getName();
 
-        $pac = PropertyAccess::createPropertyAccessor();
-
-        $embeddedEntity = $pac->getValue($entity, $propName);
+        $embeddedEntity = $this->pac->getValue($entity, $propName);
 
         if ($embeddedEntity) {
             $this->processFields($embeddedEntity, $entityManager, $isEncryptOperation);
@@ -342,13 +378,19 @@ class DoctrineEncryptSubscriber implements EventSubscriber
     }
 
     /**
-     * @return bool
+     * @return string|null
      */
-    private function isPropertyEncryped(ReflectionProperty $refProperty)
+    private function getEncryptedPropertyType(ReflectionProperty $refProperty)
     {
         $key = $refProperty->getDeclaringClass()->getName().$refProperty->getName();
         if (!array_key_exists($key,$this->cachedClassPropertiesAreEncrypted)) {
-            $this->cachedClassPropertiesAreEncrypted[$key] = (bool) $this->annReader->getPropertyAnnotation($refProperty, self::ENCRYPTED_ANN_NAME);
+            $type = null;
+            $propertyAnnotation = $this->annReader->getPropertyAnnotation($refProperty, self::ENCRYPTED_ANN_NAME);
+            if ($propertyAnnotation)
+            {
+                $type = $propertyAnnotation->type;
+            }
+            $this->cachedClassPropertiesAreEncrypted[$key] = $type;
         }
 
         return $this->cachedClassPropertiesAreEncrypted[$key];
@@ -367,15 +409,13 @@ class DoctrineEncryptSubscriber implements EventSubscriber
             // Foreach property in the reflection class
             foreach ($properties as $refProperty) {
                 if ($this->isPropertyAnEmbeddedMapping($refProperty)) {
-                    $pac = PropertyAccess::createPropertyAccessor();
-
-                    $embeddedEntity = $pac->getValue($entity, $refProperty->getName());
+                    $embeddedEntity = $this->pac->getValue($entity, $refProperty->getName());
 
                     if ($this->containsEncryptProperties($embeddedEntity)) {
                         $this->cachedClassesContainAnEncryptProperty[$realClass] = true;
                     }
                 } else {
-                    if ($this->isPropertyEncryped($refProperty)) {
+                    if ($this->getEncryptedPropertyType($refProperty)) {
                         $this->cachedClassesContainAnEncryptProperty[$realClass] = true;
                     }
                 }

@@ -75,7 +75,10 @@ class DoctrineEncryptSubscriberTest extends TestCase
             ->method('getPropertyAnnotation')
             ->willReturnCallback(function (\ReflectionProperty $reflProperty, string $class) {
                 if (Encrypted::class === $class) {
-                    return \in_array($reflProperty->getName(), ['name', 'address', 'extra']);
+                    if (\in_array($reflProperty->getName(), ['name', 'address', 'extra']))
+                    {
+                        return new $class();
+                    }
                 }
                 if (Embedded::class === $class) {
                     return 'user' === $reflProperty->getName();
@@ -302,7 +305,10 @@ class DoctrineEncryptSubscriberTest extends TestCase
             ->method('getPropertyAnnotation')
             ->willReturnCallback(function (\ReflectionProperty $reflProperty, string $class) {
                 if (Encrypted::class === $class) {
-                    return \in_array($reflProperty->getName(), ['name', 'address', 'extra']);
+                    if (\in_array($reflProperty->getName(), ['name', 'address', 'extra']))
+                    {
+                        return new $class();
+                    }
                 }
                 if (Embedded::class === $class) {
                     return 'user' === $reflProperty->getName();

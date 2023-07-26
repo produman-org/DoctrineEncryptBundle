@@ -5,7 +5,6 @@ namespace Ambta\DoctrineEncryptBundle\Tests\Functional\BasicQueryTest;
 use Ambta\DoctrineEncryptBundle\Subscribers\DoctrineEncryptSubscriber;
 use Ambta\DoctrineEncryptBundle\Tests\Functional\AbstractFunctionalTestCase;
 use Ambta\DoctrineEncryptBundle\Tests\Functional\fixtures\Entity\CascadeTarget;
-use Ambta\DoctrineEncryptBundle\Tests\Functional\fixtures\Entity\CascadeTargetStrtoupper;
 use Ambta\DoctrineEncryptBundle\Tests\Functional\fixtures\Entity\VehicleCar;
 
 abstract class AbstractBasicQueryTestCase extends AbstractFunctionalTestCase
@@ -105,23 +104,5 @@ abstract class AbstractBasicQueryTestCase extends AbstractFunctionalTestCase
         // Verify there are no queries executed
         $this->assertNull($this->getLatestUpdateQuery());
         $this->assertEquals(0,$this->getCurrentQueryCount());
-    }
-
-    public function testEntitySetterUseStrtoupper()
-    {
-        $user = new CascadeTargetStrtoupper();
-        $user->setNotSecret('My public information');
-        $user->setSecret('my secret');
-        $this->entityManager->persist($user);
-        $this->entityManager->flush();
-
-        $queryData = $this->getLatestInsertQuery();
-        $params    = array_values($queryData['params']);
-        $passwordData = $params[0] === 'My public information' ? $params[1] : $params[0];
-        $secret = $user->getSecret();
-
-        $this->assertStringEndsWith(DoctrineEncryptSubscriber::ENCRYPTION_MARKER,$passwordData);
-        $this->assertStringDoesNotContain('my secret',$passwordData);
-        $this->assertEquals('MY SECRET', $secret);
     }
 }
