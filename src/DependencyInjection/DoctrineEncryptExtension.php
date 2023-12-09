@@ -8,6 +8,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Loader;
+use Symfony\Component\HttpKernel\Kernel;
 
 /**
  * Initialization of bundle.
@@ -58,9 +59,24 @@ class DoctrineEncryptExtension extends Extension
             $loader->load('services_with_secret.yml');
         }
 
-        // Remove usage of AttributeAnnotationReader when using php < 8.0
-        if (PHP_VERSION_ID < 80000) {
-            $container->setAlias('ambta_doctrine_annotation_reader','annotations.reader');
+        // Symfony 1-4
+        // Sanity-check since this should be blocked by composer.json
+        if (Kernel::MAJOR_VERSION < 5 || (Kernel::MAJOR_VERSION === 5 && Kernel::MINOR_VERSION < 4)) {
+            throw new \RuntimeException('doctrineencryptbundle/doctrine-encrypt-bundle expects symfony-version >= 5.4!');
+        }
+
+        // Symfony 5-6
+        if (Kernel::MAJOR_VERSION < 7) {
+            // PHP 7.x (no attributes)
+            if (PHP_VERSION_ID < 80000) {
+                $loader->load('services_subscriber_with_annotations.yml');
+            // PHP 8.x (annotations and attributes)
+            } else {
+                $loader->load('services_subscriber_with_annotations_and_attributes.yml');
+            }
+        // Symfony 7 (only attributes)
+        } else {
+            $loader->load('service_listeners_with_attributes.yml');
         }
     }
 

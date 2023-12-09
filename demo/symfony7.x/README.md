@@ -1,4 +1,6 @@
-This demo-installation demonstrates a simple symfony 6.x-application using both annotations and, when using php > 8.0, attributes.
+This demo-installation demonstrates a simple symfony 7.x-application using only attributes. 
+
+Annotations are no longer allowed in symfony 7.x
 
 # How to use
 ```shell
