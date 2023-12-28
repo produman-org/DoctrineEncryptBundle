@@ -368,7 +368,10 @@ abstract class AbstractDoctrineEncryptSubscriberTestCase extends AbstractFunctio
         $entityJson = $user->getJson();
         $entityArray = $user->getArray();
 
-        $this->assertEquals($datetime, $entityDate);
+        // Doctrine datetime type is only for date and time. milliseconds and timezone is not stored.
+        // We only test the date and time accordingly
+        // https://www.doctrine-project.org/projects/doctrine-dbal/en/3.7/reference/types.html#datetime 
+        $this->assertEquals($datetime->format('Y-m-d\\TH:i:s'), $entityDate->format('Y-m-d\\TH:i:s'));
         $this->assertEquals($jsonArray, $entityJson);
         $this->assertEquals($array, $entityArray);
     }

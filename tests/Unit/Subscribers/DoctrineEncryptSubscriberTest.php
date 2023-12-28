@@ -9,6 +9,8 @@ use Ambta\DoctrineEncryptBundle\Tests\Unit\Subscribers\fixtures\ExtendedUser;
 use Ambta\DoctrineEncryptBundle\Tests\Unit\Subscribers\fixtures\User;
 use Ambta\DoctrineEncryptBundle\Tests\Unit\Subscribers\fixtures\WithUser;
 use Doctrine\Common\Annotations\Reader;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\MySQL80Platform;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Event\PostFlushEventArgs;
@@ -38,6 +40,9 @@ class DoctrineEncryptSubscriberTest extends TestCase
 
     /** @var EntityManagerInterface|MockObject */
     private $em;
+
+    /** @var Connection|MockObject */
+    private $conn;
 
     protected function createMock($originalClassName): MockObject
     {
@@ -87,6 +92,13 @@ class DoctrineEncryptSubscriberTest extends TestCase
                 return false;
             })
         ;
+
+        $this->conn = $this->createMock(Connection::class);
+        $this->conn->method('getDatabasePlatform')
+            ->willReturnCallback(function() {
+                return new MySQL80Platform();
+            });
+
         $this->em = $this->createMock(EntityManagerInterface::class);
         $this->em->method('getClassMetadata')
             ->willReturnCallback(function (string $className) {
@@ -94,6 +106,10 @@ class DoctrineEncryptSubscriberTest extends TestCase
                 $classMetaData->rootEntityName = $className;
 
                 return $classMetaData;
+            });
+        $this->em->method('getConnection')
+            ->willReturnCallback(function() {
+                return $this->conn;
             });
 
         $this->subscriber = new DoctrineEncryptSubscriber($this->reader, $this->encryptor);
@@ -253,6 +269,10 @@ class DoctrineEncryptSubscriberTest extends TestCase
 
                 return $classMetaData;
             });
+        $em->method('getConnection')
+            ->willReturnCallback(function() {
+                return $this->conn;
+            });
         $uow->expects($this->any())->method('recomputeSingleEntityChangeSet');
 
         $onFlush = new OnFlushEventArgs($em);
@@ -288,6 +308,10 @@ class DoctrineEncryptSubscriberTest extends TestCase
                 $classMetaData->rootEntityName = $className;
 
                 return $classMetaData;
+            });
+        $em->method('getConnection')
+            ->willReturnCallback(function() {
+                return $this->conn;
             });
 
         $postFlush = new PostFlushEventArgs($em);

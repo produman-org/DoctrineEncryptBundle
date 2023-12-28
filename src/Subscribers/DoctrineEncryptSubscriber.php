@@ -40,11 +40,6 @@ class DoctrineEncryptSubscriber implements EventSubscriber
     const ENCRYPTED_ANN_NAME = 'Ambta\DoctrineEncryptBundle\Configuration\Encrypted';
 
     /**
-     * DateTime format
-     */
-    const DATETIME_FORMAT = 'Y-m-d\\TH:i:s.uP';
-
-    /**
      * Encryptor
      * @var EncryptorInterface|null
      */
@@ -260,25 +255,15 @@ class DoctrineEncryptSubscriber implements EventSubscriber
                  */
                 $encryptType = $this->getEncryptedPropertyType($refProperty);
                 if ($encryptType) {
+                    $encryptDbalType = \Doctrine\DBAL\Types\Type::getType($encryptType);
+                    $platform = $entityManager->getConnection()->getDatabasePlatform();
                     $rootEntityName = $entityManager->getClassMetadata(get_class($entity))->rootEntityName;
 
                     $value = $this->pac->getValue($entity, $refProperty->getName());
                     if (!is_null($value) and !empty($value)) {
                         if ($isEncryptOperation) {
-                            // Default string value
-                            $usedValue = $value;
-                            if ($encryptType == 'datetime')
-                            {
-                                $usedValue = $value->format (self::DATETIME_FORMAT);
-                            }
-                            elseif ($encryptType == 'json')
-                            {
-                                $usedValue = json_encode($value);
-                            }
-                            elseif ($encryptType == 'array')
-                            {
-                                $usedValue = serialize($value);
-                            }
+                            // Convert to a string using doctrine-type
+                            $usedValue = $encryptDbalType->convertToDatabaseValue($value, $platform);
 
                             if (isset($this->cachedDecryptions[$rootEntityName][spl_object_id($entity)][$refProperty->getName()][$usedValue])) {
                                 $this->pac->setValue($entity, $refProperty->getName(), $this->cachedDecryptions[$rootEntityName][spl_object_id($entity)][$refProperty->getName()][$usedValue]);
@@ -292,22 +277,10 @@ class DoctrineEncryptSubscriber implements EventSubscriber
                                 $this->decryptCounter++;
                                 $currentPropValue = $this->encryptor->decrypt(substr($value, 0, -5));
                                 $this->cachedDecryptions[$rootEntityName][spl_object_id($entity)][$refProperty->getName()][$currentPropValue] = $value;
-                                if ($encryptType == 'string')
-                                {
-                                    $this->pac->setValue($entity, $refProperty->getName(), $currentPropValue);
-                                }
-                                elseif ($encryptType == 'datetime')
-                                {
-                                    $this->pac->setValue($entity, $refProperty->getName(), DateTime::createFromFormat(self::DATETIME_FORMAT, $currentPropValue));
-                                }
-                                elseif ($encryptType == 'json')
-                                {
-                                    $this->pac->setValue($entity, $refProperty->getName(), json_decode($currentPropValue, true));
-                                }
-                                elseif ($encryptType == 'array')
-                                {
-                                    $this->pac->setValue($entity, $refProperty->getName(), unserialize($currentPropValue));
-                                }
+
+                                // Convert from a string to the PHP-type again using dbal-type
+                                $actualValue = $encryptDbalType->convertToPHPValue($currentPropValue, $platform);
+                                $this->pac->setValue($entity, $refProperty->getName(),$actualValue);
                             }
                         }
                     }

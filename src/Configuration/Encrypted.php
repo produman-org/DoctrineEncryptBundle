@@ -31,9 +31,12 @@ final class Encrypted implements Annotation
 
 
 
-    public function __construct(?string $type = 'string')
+    /**
+     * @param 'string'|'datetime'|'json'|'array' $type
+     */
+    public function __construct(string $type = 'string')
     {
-        if (!in_array ($type, self::ALLOWED_TYPES))
+        if (!in_array ($type, self::ALLOWED_TYPES, true))
         {
             throw new InvalidArgumentException (sprintf('%s is not a supported type for %s', $type, self::class));
         }
