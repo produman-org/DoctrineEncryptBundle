@@ -16,6 +16,7 @@ use Doctrine\Common\Util\ClassUtils;
 use Ambta\DoctrineEncryptBundle\Encryptors\EncryptorInterface;
 use Ambta\DoctrineEncryptBundle\Mapping\AttributeReader;
 use DateTime;
+use Doctrine\DBAL\Platforms\MySQL80Platform;
 use ReflectionProperty;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
@@ -256,7 +257,7 @@ class DoctrineEncryptSubscriber implements EventSubscriber
                 $encryptType = $this->getEncryptedPropertyType($refProperty);
                 if ($encryptType) {
                     $encryptDbalType = \Doctrine\DBAL\Types\Type::getType($encryptType);
-                    $platform = $entityManager->getConnection()->getDatabasePlatform();
+                    $platform = new MySQL80Platform();
                     $rootEntityName = $entityManager->getClassMetadata(get_class($entity))->rootEntityName;
 
                     $value = $this->pac->getValue($entity, $refProperty->getName());
