@@ -19,7 +19,7 @@
         "symfony/yaml": "5.4.*"
     },
     "require-dev": {
-        "symfony/phpunit-bridge": "^6.0"
+        "symfony/phpunit-bridge": "^7.0"
     },
     "config": {
         "allow-plugins": {
