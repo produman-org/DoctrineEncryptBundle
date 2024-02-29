@@ -54,12 +54,13 @@ jobs:
         php-version: ['7.2', '7.3', '7.4', '8.0', '8.1', '8.2']
         composer-options: ['--prefer-stable']
         dependency-versions: ['highest']
-# Disable lowest for now
-#        include:
-#          # testing lowest PHP version with lowest dependencies
-#          - php-version: '7.2.5'
-#            dependency-versions: 'lowest'
-#            composer-options: '--prefer-lowest'
+        include:
+          # testing lowest PHP version with lowest dependencies
+          - php-version: '7.2.5'
+            dependency-versions: 'lowest'
+            composer-options: '--prefer-lowest'
+            env:
+              SYMFONY_PHPUNIT_VERSION: 7
 
     steps:
       - name: "Checkout code"
@@ -83,6 +84,8 @@ jobs:
 
       - name: Unit Tests
         run: vendor/bin/simple-phpunit
+        env:
+          SYMFONY_PHPUNIT_VERSION: "${{ matrix.dependency-versions == 'lowest' && '7' || '' }}"
 
       - name: Install symlinks for demo's
         uses: "ramsey/composer-install@v2"
@@ -100,6 +103,8 @@ jobs:
 
       - name: Demo symfony5.4 - Unit Tests
         run: demo/symfony5.4/bin/phpunit -c demo/symfony5.4/phpunit.xml.dist
+        env:
+          SYMFONY_PHPUNIT_VERSION: "${{ matrix.dependency-versions == 'lowest' && '7' || '' }}"
 
       - name: Demo symfony6.x - Install  dependencies
         uses: "ramsey/composer-install@v2"
