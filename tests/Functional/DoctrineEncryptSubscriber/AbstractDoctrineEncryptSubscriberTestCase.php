@@ -3,12 +3,16 @@
 
 namespace Ambta\DoctrineEncryptBundle\Tests\Functional\DoctrineEncryptSubscriber;
 
+use Ambta\DoctrineEncryptBundle\Subscribers\DoctrineEncryptSubscriber;
 use Ambta\DoctrineEncryptBundle\Tests\DoctrineCompatibilityTrait;
 use Ambta\DoctrineEncryptBundle\Tests\Functional\AbstractFunctionalTestCase;
 use Ambta\DoctrineEncryptBundle\Tests\Functional\fixtures\Entity\CascadeTarget;
+use Ambta\DoctrineEncryptBundle\Tests\Functional\fixtures\Entity\CascadeTargetStrtoupper;
 use Ambta\DoctrineEncryptBundle\Tests\Functional\fixtures\Entity\ClassTableInheritanceBase;
 use Ambta\DoctrineEncryptBundle\Tests\Functional\fixtures\Entity\ClassTableInheritanceChild;
+use Ambta\DoctrineEncryptBundle\Tests\Functional\fixtures\Entity\DateTimeJsonArrayTarget;
 use Ambta\DoctrineEncryptBundle\Tests\Functional\fixtures\Entity\Owner;
+use DateTime;
 use Doctrine\DBAL\Logging\DebugStack;
 
 
@@ -318,5 +322,57 @@ abstract class AbstractDoctrineEncryptSubscriberTestCase extends AbstractFunctio
         $shouldBeDifferentFromBefore = $result['secret'];
         $this->assertStringEndsWith('<ENC>', $shouldBeDifferentFromBefore); // is encrypted
         $this->assertNotEquals($originalEncryption, $shouldBeDifferentFromBefore);
+    }
+
+    public function testEntitySetterUseStrtoupper()
+    {
+        $user = new CascadeTargetStrtoupper();
+        $user->setNotSecret('My public information');
+        $user->setSecret('my secret');
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
+        $queryData = $this->getLatestInsertQuery();
+        $params    = array_values($queryData['params']);
+        $passwordData = $params[0] === 'My public information' ? $params[1] : $params[0];
+        $secret = $user->getSecret();
+
+        $this->assertStringEndsWith(DoctrineEncryptSubscriber::ENCRYPTION_MARKER,$passwordData);
+        $this->assertStringDoesNotContain('my secret',$passwordData);
+        $this->assertEquals('MY SECRET', $secret);
+    }
+
+    public function testEntityWithDateTimeJsonAndArrayProperties()
+    {
+        $user = new DateTimeJsonArrayTarget();
+        $datetime = new DateTime();
+        $jsonArray = [
+            'key' => 'value'
+        ];
+        $array = [0, 1];
+        $user->setDate($datetime);
+        $user->setJson($jsonArray);
+        $user->setArray($array);
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
+        $queryData = $this->getLatestInsertQuery();
+        $params    = array_values($queryData['params']);
+
+        foreach ($params as $param)
+        {
+            $this->assertStringEndsWith(DoctrineEncryptSubscriber::ENCRYPTION_MARKER,$param);
+        }
+
+        $entityDate = $user->getDate();
+        $entityJson = $user->getJson();
+        $entityArray = $user->getArray();
+
+        // Doctrine datetime type is only for date and time. milliseconds and timezone is not stored.
+        // We only test the date and time accordingly
+        // https://www.doctrine-project.org/projects/doctrine-dbal/en/3.7/reference/types.html#datetime 
+        $this->assertEquals($datetime->format('Y-m-d\\TH:i:s'), $entityDate->format('Y-m-d\\TH:i:s'));
+        $this->assertEquals($jsonArray, $entityJson);
+        $this->assertEquals($array, $entityArray);
     }
 }
