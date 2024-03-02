@@ -59,6 +59,8 @@ jobs:
           - php-version: '7.2.5'
             dependency-versions: 'lowest'
             composer-options: '--prefer-lowest'
+            env:
+              SYMFONY_PHPUNIT_VERSION: 7
 
     steps:
       - name: "Checkout code"
@@ -81,7 +83,9 @@ jobs:
           composer-options: "--prefer-dist --no-progress"
 
       - name: Unit Tests
-        run: vendor/bin/phpunit
+        run: vendor/bin/simple-phpunit
+        env:
+          SYMFONY_PHPUNIT_VERSION: "${{ matrix.dependency-versions == 'lowest' && '7' || '' }}"
 
       - name: Install symlinks for demo's
         uses: "ramsey/composer-install@v2"
@@ -90,15 +94,17 @@ jobs:
           composer-options: "--prefer-dist --no-progress"
           working-directory: "demo"
 
-      - name: Demo symfony4.4 - Install  dependencies
+      - name: Demo symfony5.4 - Install  dependencies
         uses: "ramsey/composer-install@v2"
         with:
           dependency-versions: "${{ matrix.dependency-versions }}"
           composer-options: "--prefer-dist --no-progress"
-          working-directory: "demo/symfony4.4"
+          working-directory: "demo/symfony5.4"
 
-      - name: Demo symfony4.4 - Unit Tests
-        run: demo/symfony4.4/vendor/bin/simple-phpunit -c demo/symfony4.4/phpunit.xml.dist
+      - name: Demo symfony5.4 - Unit Tests
+        run: demo/symfony5.4/bin/phpunit -c demo/symfony5.4/phpunit.xml.dist
+        env:
+          SYMFONY_PHPUNIT_VERSION: "${{ matrix.dependency-versions == 'lowest' && '7' || '' }}"
 
       - name: Demo symfony6.x - Install  dependencies
         uses: "ramsey/composer-install@v2"
@@ -111,3 +117,15 @@ jobs:
       - name: Demo symfony6.x - Unit Tests
         run: demo/symfony6.x/vendor/bin/simple-phpunit -c demo/symfony6.x/phpunit.xml.dist
         if: ${{ startsWith(matrix.php-version , '8.') }}
+
+      - name: Demo symfony7.x - Install  dependencies
+        uses: "ramsey/composer-install@v2"
+        with:
+          dependency-versions: "${{ matrix.dependency-versions }}"
+          composer-options: "--prefer-dist --no-progress"
+          working-directory: "demo/symfony7.x"
+        if: ${{ startsWith(matrix.php-version , '8.2') }}
+
+      - name: Demo symfony7.x - Unit Tests
+        run: demo/symfony7.x/vendor/bin/simple-phpunit -c demo/symfony7.x/phpunit.xml.dist
+        if: ${{ startsWith(matrix.php-version , '8.2') }}
