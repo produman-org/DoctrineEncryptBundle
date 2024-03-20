@@ -12,7 +12,6 @@ use Doctrine\Common\EventSubscriber;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\Common\Annotations\Reader;
-use Doctrine\Common\Util\ClassUtils;
 use Ambta\DoctrineEncryptBundle\Encryptors\EncryptorInterface;
 use Ambta\DoctrineEncryptBundle\Mapping\AttributeReader;
 use DateTime;
@@ -238,8 +237,8 @@ class DoctrineEncryptSubscriber implements EventSubscriber
      */
     public function processFields(object $entity, EntityManagerInterface $entityManager, bool $isEncryptOperation = true): ?object
     {
-        if (!empty($this->encryptor) && $this->containsEncryptProperties($entity)) {
-            $realClass = ClassUtils::getClass($entity);
+        if (!empty($this->encryptor) && $this->containsEncryptProperties($entityManager, $entity)) {
+            $realClass = $entityManager->getClassMetadata(get_class($entity))->getName();
 
             // Get ReflectionClass of our entity
             $properties = $this->getClassProperties($realClass);
@@ -370,9 +369,9 @@ class DoctrineEncryptSubscriber implements EventSubscriber
         return $this->cachedClassPropertiesAreEncrypted[$key];
     }
 
-    private function containsEncryptProperties($entity)
+    private function containsEncryptProperties(EntityManagerInterface $entityManager, object $entity)
     {
-        $realClass = ClassUtils::getClass($entity);
+        $realClass = $entityManager->getClassMetadata(get_class($entity))->getName();
 
         if (!array_key_exists($realClass,$this->cachedClassesContainAnEncryptProperty)) {
             $this->cachedClassesContainAnEncryptProperty[$realClass] = false;
@@ -385,7 +384,7 @@ class DoctrineEncryptSubscriber implements EventSubscriber
                 if ($this->isPropertyAnEmbeddedMapping($refProperty)) {
                     $embeddedEntity = $this->pac->getValue($entity, $refProperty->getName());
 
-                    if ($this->containsEncryptProperties($embeddedEntity)) {
+                    if ($this->containsEncryptProperties($entityManager, $embeddedEntity)) {
                         $this->cachedClassesContainAnEncryptProperty[$realClass] = true;
                     }
                 } else {
